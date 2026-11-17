@@ -1,0 +1,60 @@
+:root {
+  font-family: Arial, 'Segoe UI', sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-weight: 400;
+}
+
+h1,
+h2,
+.brand {
+  font-family: Arial, 'Segoe UI', sans-serif;
+}
+
+.range-note strong,
+.best-record-value,
+.attempt-count strong,
+.guess-form input {
+  font-family: Consolas, 'Courier New', monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background: #061423;
+}
+
+body[data-theme='light'] {
+  background: #f4f8fa;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button,
+select {
+  color: inherit;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 3px solid #087fae;
+  outline-offset: 3px;
+}
+
+::selection {
+  color: #061423;
+  background: #41c5f5;
+}
