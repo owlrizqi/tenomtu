@@ -105,7 +105,7 @@ const copy = {
     largeText: 'Large text size',
     introFirst: 'Feeling lucky?',
     introAccent: 'Take a shot!',
-    intro: "Picked a number. Hit it in one go?",
+    intro: "Picked a number. Hit it in one go!",
     range: 'Range',
     to: 'to',
     difficulty: 'DIFFICULTY',
