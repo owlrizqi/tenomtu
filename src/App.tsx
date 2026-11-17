@@ -148,7 +148,9 @@ function getFeedbackMessage(
 
 function App() {
   const [language, setLanguage] = useState<Language>('bm')
-  const [theme, setTheme] = useState<Theme>('dark')
+  const [theme, setTheme] = useState<Theme>(() => (
+    window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+  ))
   const [fontSize, setFontSize] = useState<FontSize>('normal')
   const [difficulty, setDifficulty] = useState<Difficulty>(DIFFICULTIES[0])
   const [gameStarted, setGameStarted] = useState(false)
@@ -168,6 +170,7 @@ function App() {
     kind: 'opening',
   })
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const manualThemeRef = useRef(false)
   const text = copy[language]
   const formatter = numberFormatters[language]
   const bestRecord = bestRecords[difficulty.id]
@@ -184,6 +187,18 @@ function App() {
     } catch {
       setStorageAvailable(false)
     }
+  }, [])
+
+  useEffect(() => {
+    const preference = window.matchMedia('(prefers-color-scheme: light)')
+    const syncTheme = () => {
+      if (!manualThemeRef.current) {
+        setTheme(preference.matches ? 'light' : 'dark')
+      }
+    }
+
+    preference.addEventListener('change', syncTheme)
+    return () => preference.removeEventListener('change', syncTheme)
   }, [])
 
   useEffect(() => {
@@ -311,7 +326,10 @@ function App() {
           <button
             aria-label={theme === 'dark' ? text.switchToLight : text.switchToDark}
             className="theme-toggle"
-            onClick={() => setTheme((current) => current === 'dark' ? 'light' : 'dark')}
+            onClick={() => {
+              manualThemeRef.current = true
+              setTheme((current) => current === 'dark' ? 'light' : 'dark')
+            }}
             type="button"
           >
             {theme === 'dark' ? (
