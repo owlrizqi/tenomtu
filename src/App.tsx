@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type FormEvent,
+} from 'react'
 import {
   DIFFICULTIES,
   evaluateGuess,
@@ -146,6 +152,21 @@ function getFeedbackMessage(
   }
 }
 
+function formatGuessInput(input: string, caretPosition: number) {
+  const digits = input.replace(/\D/g, '')
+  const formatted = digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  const digitsBeforeCaret = input.slice(0, caretPosition).replace(/\D/g, '').length
+  let nextCaretPosition = 0
+  let digitsSeen = 0
+
+  while (nextCaretPosition < formatted.length && digitsSeen < digitsBeforeCaret) {
+    if (/\d/.test(formatted[nextCaretPosition])) digitsSeen += 1
+    nextCaretPosition += 1
+  }
+
+  return { formatted, caretPosition: nextCaretPosition }
+}
+
 function App() {
   const [language, setLanguage] = useState<Language>('bm')
   const [theme, setTheme] = useState<Theme>(() => (
@@ -170,6 +191,8 @@ function App() {
     kind: 'opening',
   })
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const guessInputRef = useRef<HTMLInputElement>(null)
+  const pendingGuessCaretRef = useRef<number | null>(null)
   const manualThemeRef = useRef(false)
   const text = copy[language]
   const formatter = numberFormatters[language]
@@ -213,6 +236,15 @@ function App() {
     document.documentElement.lang = language === 'bm' ? 'ms' : 'en'
   }, [language])
 
+  useLayoutEffect(() => {
+    const input = guessInputRef.current
+    const caretPosition = pendingGuessCaretRef.current
+    if (input && caretPosition !== null) {
+      input.setSelectionRange(caretPosition, caretPosition)
+      pendingGuessCaretRef.current = null
+    }
+  }, [guess])
+
   useEffect(() => {
     document.body.dataset.theme = theme
     const themeColor = document.querySelector<HTMLMetaElement>(
@@ -239,9 +271,10 @@ function App() {
     event.preventDefault()
     if (won) return
 
-    const value = Number(guess)
+    const digits = guess.replace(/,/g, '')
+    const value = Number(digits)
     if (
-      !/^\d+$/.test(guess.trim()) ||
+      !/^\d+$/.test(digits.trim()) ||
       !Number.isSafeInteger(value) ||
       value < 1 ||
       value > difficulty.max
@@ -438,8 +471,16 @@ function App() {
                   id="guess-input"
                   inputMode="numeric"
                   name="guess"
-                  onChange={(event) => setGuess(event.target.value)}
+                  onChange={(event) => {
+                    const { formatted, caretPosition } = formatGuessInput(
+                      event.currentTarget.value,
+                      event.currentTarget.selectionStart ?? event.currentTarget.value.length,
+                    )
+                    pendingGuessCaretRef.current = caretPosition
+                    setGuess(formatted)
+                  }}
                   placeholder={text.placeholder}
+                  ref={guessInputRef}
                   type="text"
                   value={guess}
                   disabled={won}

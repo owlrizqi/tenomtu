@@ -741,13 +741,13 @@
 }
 
 .font-size-control .font-size-option--small {
-  font-size: 6px;
-}
-
-.font-size-control .font-size-option--medium {
   font-size: 8px;
 }
 
-.font-size-control .font-size-option--large {
+.font-size-control .font-size-option--medium {
   font-size: 10px;
+}
+
+.font-size-control .font-size-option--large {
+  font-size: 12px;
 }
