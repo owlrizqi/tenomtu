@@ -741,13 +741,13 @@
 }
 
 .font-size-control .font-size-option--small {
-  font-size: calc(12px * var(--font-scale));
+  font-size: 6px;
 }
 
 .font-size-control .font-size-option--medium {
-  font-size: calc(16px * var(--font-scale));
+  font-size: 8px;
 }
 
 .font-size-control .font-size-option--large {
-  font-size: calc(20px * var(--font-scale));
+  font-size: 10px;
 }
