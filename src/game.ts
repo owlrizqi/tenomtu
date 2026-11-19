@@ -10,6 +10,44 @@ export const DIFFICULTIES = [
 export type Difficulty = (typeof DIFFICULTIES)[number]
 
 export type GuessResult = 'too-low' | 'too-high' | 'correct'
+export type VictoryPraiseKind =
+  | 'one-try'
+  | 'intuition'
+  | 'half-method'
+  | 'no-half-method'
+
+export function isMidpointGuess(
+  guess: number,
+  min: number,
+  max: number,
+): boolean {
+  const lowerMidpoint = Math.floor((min + max) / 2)
+  const upperMidpoint = Math.ceil((min + max) / 2)
+  return guess === lowerMidpoint || guess === upperMidpoint
+}
+
+export function maximumMidpointGuesses(max: number): number {
+  if (!Number.isSafeInteger(max) || max < 1) {
+    throw new RangeError('The maximum must be a positive safe integer.')
+  }
+
+  return Math.ceil(Math.log2(max + 1))
+}
+
+export function getVictoryPraiseKind(
+  attempts: number,
+  max: number,
+  usedHalfMethod: boolean,
+): VictoryPraiseKind {
+  if (!Number.isSafeInteger(attempts) || attempts < 1) {
+    throw new RangeError('The attempt count must be a positive safe integer.')
+  }
+
+  const maximumAttempts = maximumMidpointGuesses(max)
+  if (attempts === 1) return 'one-try'
+  if (attempts < maximumAttempts) return 'intuition'
+  return usedHalfMethod ? 'half-method' : 'no-half-method'
+}
 
 export function generateSecretNumber(
   max: number,

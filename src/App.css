@@ -253,6 +253,11 @@
   text-align: right;
 }
 
+.best-record-value.has-value,
+.dialog-record-summary.has-value {
+  white-space: nowrap;
+}
+
 .primary-button {
   width: 100%;
   min-height: 64px;
@@ -741,13 +746,274 @@
 }
 
 .font-size-control .font-size-option--small {
-  font-size: 4px;
+  font-size: 8px;
 }
 
 .font-size-control .font-size-option--medium {
-  font-size: 6px;
+  font-size: 10px;
 }
 
 .font-size-control .font-size-option--large {
-  font-size: 8px;
+  font-size: 13px;
+}
+
+@media (max-width: 760px) {
+  .page-shell {
+    width: min(100% - 36px, 520px);
+  }
+
+  .game-layout {
+    gap: 24px;
+    padding: 24px 0 28px;
+  }
+
+  .game-layout.is-playing {
+    min-height: 0;
+    align-content: start;
+    padding: 12px 0 20px;
+  }
+
+  .game-card,
+  .game-layout.is-playing .game-card {
+    padding: 20px 18px;
+  }
+
+  .step-description {
+    margin: 10px 0 18px;
+    line-height: 1.4;
+  }
+
+  .field-label {
+    margin-bottom: 7px;
+  }
+
+  .guess-form input {
+    min-height: 72px;
+    padding: 10px 14px;
+  }
+
+  .feedback {
+    min-height: 0;
+    margin: 12px 0 4px;
+  }
+
+  .attempt-count {
+    margin: 8px 0;
+  }
+
+  .primary-button {
+    min-height: 54px;
+    margin-top: 10px;
+    padding: 11px 16px;
+  }
+
+  .text-button {
+    min-height: 40px;
+    margin-top: 8px;
+    padding: 6px 12px;
+  }
+
+  .select-wrap select {
+    min-width: 0;
+    min-height: 54px;
+    padding: 10px 12px;
+    font-size: min(calc(20px * var(--font-scale)), 16px);
+  }
+
+  .victory-dialog {
+    width: calc(100% - 24px);
+    max-height: min(90vh, 760px);
+    max-height: min(90dvh, 760px);
+  }
+
+  .dialog-content {
+    padding: 20px;
+  }
+
+  .dialog-record {
+    gap: 6px;
+    margin: 14px 0;
+  }
+
+  .dialog-divider {
+    margin: 14px 0;
+  }
+}
+
+@media (max-width: 400px) {
+  .page-shell {
+    width: min(100% - 24px, 520px);
+  }
+
+  .game-layout {
+    gap: 20px;
+    padding: 20px 0 24px;
+  }
+
+  .game-card,
+  .game-layout.is-playing .game-card {
+    padding: 16px;
+  }
+
+  .dialog-content {
+    padding: 12px;
+  }
+
+  .dialog-content h2 {
+    font-size: min(calc(clamp(26px, 6vw, 36px) * var(--font-scale)), 30px);
+  }
+
+  .dialog-congratulations {
+    margin-top: 4px;
+    font-size: min(calc(18px * var(--font-scale)), 16px);
+    line-height: 1.2;
+  }
+
+  .dialog-score {
+    margin-top: 6px;
+    font-size: min(calc(15px * var(--font-scale)), 14px);
+    line-height: 1.3;
+  }
+
+  .dialog-record {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    margin: 8px 0;
+    font-size: min(calc(13px * var(--font-scale)), 13px);
+  }
+
+  .dialog-divider {
+    margin: 6px 0;
+  }
+
+  .dialog-content > label {
+    margin-bottom: 4px;
+    font-size: min(calc(14px * var(--font-scale)), 14px);
+  }
+
+  .dialog-select-wrap select {
+    min-height: 46px;
+    padding: 8px 10px;
+  }
+
+  .dialog-range {
+    margin-top: 4px;
+    font-size: min(calc(13px * var(--font-scale)), 13px);
+    line-height: 1.2;
+  }
+
+  .dialog-content .primary-button {
+    min-height: 44px;
+    margin-top: 6px;
+    padding: 8px 12px;
+    font-size: min(calc(17px * var(--font-scale)), 16px);
+  }
+
+  .game-layout.is-playing .game-step h1 {
+    font-size: min(calc(36px * var(--font-scale)), 34px);
+  }
+
+  .game-layout.is-playing .step-description {
+    margin: 6px 0 12px;
+    font-size: min(calc(18px * var(--font-scale)), 18px);
+  }
+
+  .game-layout.is-playing .field-label {
+    font-size: min(calc(17px * var(--font-scale)), 17px);
+  }
+
+  .game-layout.is-playing .guess-form input {
+    min-height: 64px;
+    font-size: min(calc(30px * var(--font-scale)), 32px);
+  }
+
+  .game-layout.is-playing .guess-form input::placeholder {
+    font-size: min(calc(18px * var(--font-scale)), 18px);
+  }
+
+  .game-layout.is-playing .feedback {
+    margin: 8px 0 2px;
+    font-size: min(calc(18px * var(--font-scale)), 18px);
+    line-height: 1.35;
+  }
+
+  .game-layout.is-playing .attempt-count {
+    margin: 6px 0;
+    font-size: min(calc(16px * var(--font-scale)), 16px);
+  }
+
+  .game-layout.is-playing .attempt-count strong {
+    font-size: min(calc(22px * var(--font-scale)), 22px);
+  }
+
+  .game-layout.is-playing .primary-button {
+    min-height: 50px;
+    font-size: min(calc(19px * var(--font-scale)), 19px);
+  }
+
+  .game-layout.is-playing .text-button {
+    min-height: 36px;
+    font-size: min(calc(15px * var(--font-scale)), 15px);
+  }
+}
+
+.dialog-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dialog-heading h2 {
+  flex: 1;
+  min-width: 0;
+}
+
+.dialog-close-button {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  place-items: center;
+  margin: -4px -4px 0 0;
+  padding: 0;
+  border: 1px solid var(--color-line);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.dialog-close-button span {
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.dialog-close-button:hover {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+}
+
+.dialog-range {
+  margin: 8px 0 0;
+  color: var(--color-muted);
+  font-size: calc(15px * var(--font-scale));
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 400px) {
+  .dialog-close-button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .dialog-range {
+    margin-top: 4px;
+    font-size: min(calc(13px * var(--font-scale)), 13px);
+    line-height: 1.2;
+  }
 }

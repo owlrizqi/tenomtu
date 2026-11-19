@@ -8,8 +8,11 @@ import {
 import {
   DIFFICULTIES,
   evaluateGuess,
+  getVictoryPraiseKind,
   generateSecretNumber,
+  isMidpointGuess,
   type Difficulty,
+  type VictoryPraiseKind,
 } from './game'
 import { loadBestRecords, saveBestRecord } from './records'
 import './App.css'
@@ -34,7 +37,7 @@ const difficultyNames: Record<Language, Record<Difficulty['id'], string>> = {
     medium: 'Sederhana',
     hard: 'Susah',
     evil: 'Kejam',
-    monster: 'Monster',
+    monster: 'Gila',
     impossible: 'Mustahil',
   },
   en: {
@@ -55,7 +58,7 @@ const copy = {
     startGame: 'MULA TEKA',
     changeDifficulty: 'TUKAR TAHAP',
     feedbackPrompt: 'Ada maklum balas?',
-    feedbackLink: 'Hantar e-mel kepada kami',
+    feedbackLink: 'Hantar e-mel ke',
     switchToLight: 'Tukar ke tema cerah',
     switchToDark: 'Tukar ke tema gelap',
     textSize: 'Saiz teks',
@@ -76,16 +79,27 @@ const copy = {
     guess: 'TEKA',
     tooLow: 'terlalu rendah! Cuba nombor yang lebih besar.',
     tooHigh: 'terlalu tinggi! Cuba nombor yang lebih kecil.',
-    won: 'Yes! Kena tepat dalam',
     guessSingular: 'cubaan!',
     guessPlural: 'cubaan!',
     invalid: 'Masukkan nombor bulat dari 1 hingga',
     opening: 'Cuba teka nombor rahsia!',
-    victoryTitle: 'Hebat, tepat sekali!',
-    victoryNewBest: 'Rekod baharu! Memang hebat!',
+    victoryTitle: 'Headshot!',
+    victoryNewBest: 'Rekod baharu! Awak memang padu!',
     victoryRecord: 'Rekod terbaik',
     victoryNext: 'Nak cuba tahap mana pula?',
     startNext: 'JOM, MULA!',
+    close: 'Tutup dan kembali ke halaman utama',
+    oneTry: {
+      easy: 'WooW, sekali kena!',
+      medium: 'Sederhana sekali jalan? Not bad!',
+      hard: 'Susah pun dapat headshot? Padu!',
+      evil: 'Kejam dapat one shot? Insting padu!',
+      monster: 'Anda memang gila ke? Bukan kaling2!',
+      impossible: 'Pergh, intuisi anda mustahil ditiru!',
+    },
+    intuitionPraise: 'Wah, intuisi anda memang lain macam!',
+    halfMethodPraise: 'Nerd betul guna kaedah bahagi dua! >w<',
+    noHalfMethodPraise: 'Padu eh, dapat teka tanpa guna matematik!',
     language: 'Bahasa',
     saveUnavailable: 'Rekod tidak dapat disimpan dalam pelayar ini.',
   },
@@ -117,16 +131,27 @@ const copy = {
     guess: 'GUESS',
     tooLow: 'is a little low. Go higher!',
     tooHigh: 'is a little high. Go lower!',
-    won: 'Nice! You got it in',
-    guessSingular: 'guess.',
-    guessPlural: 'guesses.',
+    guessSingular: 'guess',
+    guessPlural: 'guesses',
     invalid: 'Pick a whole number from 1 to',
     opening: 'Take a guess!',
-    victoryTitle: 'Brilliant—you got it!',
-    victoryNewBest: 'New personal best! Look at you go!',
+    victoryTitle: 'You got it!',
+    victoryNewBest: 'New personal best! You are superstar!',
     victoryRecord: 'Best record',
     victoryNext: 'What level are you taking on next?',
     startNext: "LET'S GO!",
+    close: 'Close and return home',
+    oneTry: {
+      easy: 'Easy one shot huh!',
+      medium: 'Oneshot in Medium? What luck!',
+      hard: 'You got it even in Hard? Sharp!',
+      evil: 'Only devil get oneshot on this level!',
+      monster: 'Monster in one? Incredible!',
+      impossible: 'Wow, your intuition is impossible to copy!',
+    },
+    intuitionPraise: 'Wow, your intuition is something else!',
+    halfMethodPraise: 'You are a nerd huh! >w<',
+    noHalfMethodPraise: 'Nice! No math rules, just instinct!',
     language: 'Language',
     saveUnavailable: 'This browser could not save your record.',
   },
@@ -148,7 +173,7 @@ function getFeedbackMessage(
     case 'too-high':
       return `${formatter.format(state.value)} ${text.tooHigh}`
     case 'won':
-      return `${text.won} ${state.attempts} ${state.attempts === 1 ? text.guessSingular : text.guessPlural}`
+      return `${formatter.format(state.attempts)} ${state.attempts === 1 ? text.guessSingular : text.guessPlural}`
   }
 }
 
@@ -182,6 +207,7 @@ function App() {
   const [guess, setGuess] = useState('')
   const [attempts, setAttempts] = useState(0)
   const [won, setWon] = useState(false)
+  const [victoryPraise, setVictoryPraise] = useState<VictoryPraiseKind | null>(null)
   const [isNewBest, setIsNewBest] = useState(false)
   const [storageAvailable, setStorageAvailable] = useState(true)
   const [bestRecords, setBestRecords] = useState<
@@ -192,11 +218,28 @@ function App() {
   })
   const dialogRef = useRef<HTMLDialogElement>(null)
   const guessInputRef = useRef<HTMLInputElement>(null)
+  const guessBoundsRef = useRef<{ min: number; max: number }>({
+    min: 1,
+    max: DIFFICULTIES[0].max,
+  })
+  const midpointMethodRef = useRef(true)
   const pendingGuessCaretRef = useRef<number | null>(null)
   const manualThemeRef = useRef(false)
   const text = copy[language]
   const formatter = numberFormatters[language]
   const bestRecord = bestRecords[difficulty.id]
+  const nextDifficultyOption = DIFFICULTIES.find(
+    ({ id }) => id === nextDifficulty,
+  )
+  const victoryPraiseMessage = victoryPraise === 'one-try'
+    ? text.oneTry[difficulty.id]
+    : victoryPraise === 'intuition'
+      ? text.intuitionPraise
+      : victoryPraise === 'half-method'
+        ? text.halfMethodPraise
+        : victoryPraise === 'no-half-method'
+          ? text.noHalfMethodPraise
+          : text.victoryTitle
   const feedback = getFeedbackMessage(
     feedbackState,
     text,
@@ -258,11 +301,25 @@ function App() {
   function startNewGame(next: Difficulty = difficulty) {
     setDifficulty(next)
     setNextDifficulty(next.id)
+    guessBoundsRef.current = { min: 1, max: next.max }
+    midpointMethodRef.current = true
     setSecret(generateSecretNumber(next.max))
     setGameStarted(true)
     setGuess('')
     setAttempts(0)
     setWon(false)
+    setVictoryPraise(null)
+    setIsNewBest(false)
+    setFeedbackState({ kind: 'opening' })
+  }
+
+  function returnHome() {
+    if (nextDifficultyOption) setDifficulty(nextDifficultyOption)
+    setGameStarted(false)
+    setGuess('')
+    setAttempts(0)
+    setWon(false)
+    setVictoryPraise(null)
     setIsNewBest(false)
     setFeedbackState({ kind: 'opening' })
   }
@@ -285,10 +342,23 @@ function App() {
 
     const result = evaluateGuess(value, secret)
     const totalAttempts = attempts + 1
+    const midpointGuess = isMidpointGuess(
+      value,
+      guessBoundsRef.current.min,
+      guessBoundsRef.current.max,
+    )
+    if (!midpointGuess) midpointMethodRef.current = false
     setAttempts(totalAttempts)
 
     if (result === 'correct') {
       setWon(true)
+      setVictoryPraise(
+        getVictoryPraiseKind(
+          totalAttempts,
+          difficulty.max,
+          midpointMethodRef.current,
+        ),
+      )
       setFeedbackState({ kind: 'won', attempts: totalAttempts })
 
       try {
@@ -307,8 +377,10 @@ function App() {
 
       setNextDifficulty(difficulty.id)
     } else if (result === 'too-low') {
+      guessBoundsRef.current.min = value + 1
       setFeedbackState({ kind: 'too-low', value })
     } else {
+      guessBoundsRef.current.max = value - 1
       setFeedbackState({ kind: 'too-high', value })
     }
 
@@ -316,8 +388,7 @@ function App() {
   }
 
   function startSelectedDifficulty() {
-    const selected = DIFFICULTIES.find(({ id }) => id === nextDifficulty)
-    if (selected) startNewGame(selected)
+    if (nextDifficultyOption) startNewGame(nextDifficultyOption)
   }
 
   return (
@@ -429,7 +500,7 @@ function App() {
                 >
                   {DIFFICULTIES.map((option) => (
                     <option key={option.id} value={option.id}>
-                      {difficultyNames[language][option.id]} (1 {text.to} {formatter.format(option.max)})
+                      {difficultyNames[language][option.id]}
                     </option>
                   ))}
                 </select>
@@ -439,9 +510,9 @@ function App() {
               </p>
               <div className="best-record">
                 <span className="best-record-label">{text.best}</span>
-                <span className="best-record-value">
+                <span className={`best-record-value${bestRecord ? ' has-value' : ''}`}>
                   {bestRecord
-                    ? `${bestRecord} ${bestRecord === 1 ? text.guessSingular : text.guessPlural}`
+                    ? `${formatter.format(bestRecord)} ${bestRecord === 1 ? text.guessSingular : text.guessPlural}`
                     : text.bestNone}
                 </span>
               </div>
@@ -501,12 +572,7 @@ function App() {
               )}
               <button
                 className="text-button"
-                onClick={() => {
-                  setGameStarted(false)
-                  setAttempts(0)
-                  setGuess('')
-                  setFeedbackState({ kind: 'opening' })
-                }}
+                onClick={returnHome}
                 type="button"
               >
                 {text.changeDifficulty}
@@ -519,7 +585,7 @@ function App() {
       <footer className="page-footer">
         <span>{text.feedbackPrompt}</span>
         <a href="mailto:owlrizqilabs@gmail.com?subject=Tenomtu%20feedback">
-          {text.feedbackLink} · owlrizqilabs@gmail.com
+          {text.feedbackLink} owlrizqilabs@gmail.com
         </a>
       </footer>
 
@@ -531,17 +597,29 @@ function App() {
         ref={dialogRef}
       >
         <div className="dialog-content">
-          <h2 id="victory-title">{text.finished}</h2>
-          <p className="dialog-congratulations">{text.victoryTitle}</p>
+          <div className="dialog-heading">
+            <h2 id="victory-title">{text.finished}</h2>
+            <button
+              aria-label={text.close}
+              className="dialog-close-button"
+              onClick={returnHome}
+              type="button"
+            >
+              <span aria-hidden="true">×</span>
+            </button>
+          </div>
+          <p className="dialog-congratulations">{victoryPraiseMessage}</p>
           <p className="dialog-score" id="victory-score">{feedback}</p>
           <p className="dialog-record">
             {isNewBest && <span className="new-record">{text.victoryNewBest}</span>}
-            <span>{text.victoryRecord}: </span>
-            <strong>
-              {bestRecord
-                ? `${bestRecord} ${bestRecord === 1 ? text.guessSingular : text.guessPlural}`
-                : text.bestNone}
-            </strong>
+            <span className={`dialog-record-summary${bestRecord ? ' has-value' : ''}`}>
+              {text.victoryRecord}:{' '}
+              <strong>
+                {bestRecord
+                  ? `${formatter.format(bestRecord)} ${bestRecord === 1 ? text.guessSingular : text.guessPlural}`
+                  : text.bestNone}
+              </strong>
+            </span>
           </p>
           <div className="dialog-divider" />
           <label htmlFor="next-difficulty">{text.victoryNext}</label>
@@ -559,11 +637,16 @@ function App() {
             >
               {DIFFICULTIES.map((option) => (
                 <option key={option.id} value={option.id}>
-                  {difficultyNames[language][option.id]} (1 {text.to} {formatter.format(option.max)})
+                  {difficultyNames[language][option.id]}
                 </option>
               ))}
             </select>
           </div>
+          {nextDifficultyOption && (
+            <p className="dialog-range">
+              {text.range}: 1–{formatter.format(nextDifficultyOption.max)}
+            </p>
+          )}
           <button
             className="primary-button"
             onClick={startSelectedDifficulty}
